@@ -43,8 +43,8 @@ jobs:
           cluster-name: << parameters.cluster-name >>
           install-kubectl: true
       - kubernetes/create-or-update-resource:
-          resource-file-path: "hello-k8s.yml"
-          resource-name: "deployment/hello-k8s"
+          resource-file-path: "hello-k8s.yaml"
+          resource-name: "hello-k8s"
           get-rollout-status: true
           show-kubectl-command: true
 workflows:
