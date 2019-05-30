@@ -51,6 +51,3 @@ workflows:
     jobs:
       - create-deployment:
           cluster-name: ribbonwall
-          requires:
-            - aws-eks/create-cluster
-
