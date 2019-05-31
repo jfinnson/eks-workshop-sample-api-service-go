@@ -62,7 +62,7 @@ workflows:
           path: ~/project/hello_k8s
           tag: ${CIRCLE_SHA1}
           # Uncomment if the repository does not yet exist
-          create-repo: true
+          # create-repo: true
       - deploy-application:
           cluster-name: ribbonwall
           aws-region: $AWS_DEFAULT_REGION
