@@ -1,18 +1,11 @@
-# This is a multi-stage build. First we are going to compile and then
-# create a small image for runtime.
-FROM golang:1.11.1 as builder
+# build stage
+FROM golang:alpine AS build-env
+ADD src /src
+RUN cd /src && go build -o hello_k8s main.go
 
-RUN mkdir -p /go/src/github.com/hello-k8s
-WORKDIR /go/src/github.com/hello-k8s
-RUN useradd -u 10001 app
-COPY .. .
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
-
-FROM scratch
-
-COPY --from=builder /go/src/github.com/hello-k8s/main /main
-COPY --from=builder /etc/passwd /etc/passwd
-USER app
-
+# final stage
+FROM alpine
+WORKDIR /app
+COPY --from=build-env /src/hello_k8s /app/
 EXPOSE 8080
-CMD ["/main"]
+ENTRYPOINT ./hello_k8s
