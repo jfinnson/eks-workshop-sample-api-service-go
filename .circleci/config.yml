@@ -31,7 +31,7 @@ jobs:
         default: ""
     steps:
         - checkout
-          - run:
+        - run:
           name: Create deployment manifest
           command: |
             # Replace the placeholders in the manifest with the intended values.
