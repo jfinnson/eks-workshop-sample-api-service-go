@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: hello-k8s
   annotations:
-    external-dns.alpha.kubernetes.io/hostname: test1.ribbonwall.ca
+    external-dns.alpha.kubernetes.io/hostname: test3.ribbonwall.ca
 spec:
   type: LoadBalancer
   ports:
