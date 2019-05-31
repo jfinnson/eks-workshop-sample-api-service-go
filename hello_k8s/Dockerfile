@@ -8,4 +8,5 @@ FROM alpine
 WORKDIR /app
 COPY --from=build-env /src/hello_k8s /app/
 EXPOSE 8080
-ENTRYPOINT ["sh", "./hello_k8s"]
+RUN ["chmod", "+x", "./hello_k8s"]
+ENTRYPOINT ./hello_k8s
