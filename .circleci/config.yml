@@ -49,7 +49,7 @@ jobs:
         - kubernetes/create-or-update-resource:
             resource-file-path: "k8s/hello-k8s-deployment.yaml"
             get-rollout-status: true
-            resource-name: k8s/hello-k8s
+            resource-name: deployment/hello-k8s
             show-kubectl-command: true
 workflows:
   deployment:
