@@ -6,49 +6,67 @@ version: 2.1
 orbs:
   aws-eks: circleci/aws-eks@0.1.0
   kubernetes: circleci/kubernetes@0.3.0
+  aws-ecr: circleci/aws-ecr@3.1.0
 
 jobs:
-  build:
-    docker:
-      # specify the version
-      - image: circleci/golang:1.9
-
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
-
-    #### TEMPLATE_NOTE: go expects specific checkout path representing url
-    #### expecting it in the form of
-    ####   /go/src/github.com/circleci/go-tool
-    ####   /go/src/bitbucket.org/circleci/go-tool
-    working_directory: /go/src/github.com/jfinnson/eks-workshop-sample-api-service-go
-    steps:
-      - checkout
-
-      # specify any bash command here prefixed with `run: `
-      - run: go get -v -t -d ./...
-      - run: go test -v ./...
-
-  create-deployment:
+  deploy-application:
     executor: aws-eks/python3
     parameters:
       cluster-name:
         description: |
           Name of the EKS cluster
         type: string
+      docker-image-name:
+        description: |
+          Name of the docker image to be deployed
+        type: string
+      version-info:
+        description: |
+          App version information
+        type: string
+      aws-region:
+        description: |
+          AWS region
+        type: string
+        default: ""
     steps:
-      - checkout
-      - aws-eks/update-kubeconfig-with-authenticator:
-          cluster-name: << parameters.cluster-name >>
-          install-kubectl: true
-      - kubernetes/create-or-update-resource:
-          resource-file-path: "hello-k8s.yaml"
-          resource-name: "hello-k8s"
-          get-rollout-status: true
-          show-kubectl-command: true
+        - checkout
+          - run:
+          name: Create deployment manifest
+          command: |
+            # Replace the placeholders in the manifest with the intended values.
+            # This is to avoid hardcoding the image name in the manifest, to make this
+            # project more portable.
+            BUILD_DATE=$(date '+%Y%m%d%H%M%S')
+            cat k8s/hello-k8s.yaml.template |\
+               sed "s|DOCKER_IMAGE_NAME|<< parameters.docker-image-name >>|\
+                g;s|BUILD_DATE_VALUE|$BUILD_DATE|g;s|VERSION_INFO_VALUE|\
+                << parameters.version-info >>|g" > k8s/hello-k8s-deployment.yaml
+        - aws-eks/update-kubeconfig-with-authenticator:
+            cluster-name: << parameters.cluster-name >>
+            install-kubectl: true
+            aws-region: << parameters.aws-region >>
+        - kubernetes/create-or-update-resource:
+            resource-file-path: "k8s/hello-k8s-deployment.yaml"
+            get-rollout-status: true
+            resource-name: k8s/hello-k8s
+            show-kubectl-command: true
 workflows:
   deployment:
     jobs:
-      - create-deployment:
+      - aws-ecr/build_and_push_image:
+          account-url: AWS_ECR_URL
+          region: AWS_DEFAULT_REGION
+          repo: hello_k8s
+          dockerfile: ~/project/hello_k8s/Dockerfile
+          path: ~/project/hello_k8s
+          tag: ${CIRCLE_SHA1}
+          # Uncomment if the repository does not yet exist
+          create-repo: true
+      - deploy-application:
           cluster-name: ribbonwall
+          aws-region: $AWS_DEFAULT_REGION
+          docker-image-name: "${AWS_ECR_URL}/hello_k8s:${CIRCLE_SHA1}"
+          version-info: "${CIRCLE_SHA1}"
+          requires:
+            - aws-ecr/build_and_push_image

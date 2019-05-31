@@ -16,11 +16,6 @@ metadata:
   name: hello-k8s
 spec:
   replicas: 3
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 2
-      maxSurge: 2
   selector:
     matchLabels:
       app: hello-k8s
@@ -31,11 +26,16 @@ spec:
     spec:
       containers:
         - name: hello-k8s
-          image: CONTAINER_IMAGE
+          image: DOCKER_IMAGE_NAME
           securityContext:
             privileged: false
             readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
+          env:
+            - name: VERSION_INFO
+              value: "VERSION_INFO_VALUE"
+            - name: BUILD_DATE
+              value: "BUILD_DATE_VALUE"
           ports:
             - containerPort: 8080
 
